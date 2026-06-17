@@ -95,6 +95,22 @@ describe('Empty-completion failover', () => {
     expect(chatCompletion.mock.calls[0][2]).not.toBe(chatCompletion.mock.calls[1][2]);
   });
 
+  it('/v1/chat/completions (non-stream): provider 502 fails over to the next model', async () => {
+    chatCompletion
+      .mockRejectedValueOnce(Object.assign(new Error('OpenRouter API error 502: Bad Gateway'), { status: 502 }))
+      .mockResolvedValueOnce(GOOD_RESULT);
+
+    const { status, body, headers } = await post(app, '/v1/chat/completions', {
+      messages: [{ role: 'user', content: 'hi' }],
+    }, key);
+
+    expect(status).toBe(200);
+    expect(body.choices[0].message.content).toBe('a real answer');
+    expect(headers.get('x-fallback-attempts')).toBe('1');
+    expect(chatCompletion).toHaveBeenCalledTimes(2);
+    expect(chatCompletion.mock.calls[0][2]).not.toBe(chatCompletion.mock.calls[1][2]);
+  });
+
   it('/v1/chat/completions (stream): zero-chunk stream fails over instead of emitting an empty stream', async () => {
     streamChatCompletion
       .mockReturnValueOnce(emptyStream())
