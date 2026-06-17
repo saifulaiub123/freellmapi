@@ -2198,11 +2198,11 @@ function migrateProfilesInit(db: Database.Database) {
       ORDER BY priority ASC
     `).run(profileId);
 
-    // Make it the active profile if none is set
-    db.prepare(`
-      INSERT INTO settings (key, value) VALUES ('active_profile_id', ?)
-      ON CONFLICT(key) DO NOTHING
-    `).run(String(profileId));
+    // NOTE: We intentionally do NOT set 'active_profile_id' here. With no active
+    // profile, the router (getActiveChain) routes 'auto' requests using
+    // fallback_config — so the Models > Chat page (PUT /api/fallback) controls
+    // priority/enabled for chat. Activate a profile explicitly via
+    // POST /api/profiles/active to opt into profile-based routing.
 
     console.log('Created Default profile');
   } else {
