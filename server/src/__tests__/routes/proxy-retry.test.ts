@@ -134,14 +134,6 @@ describe('isRetryableError', () => {
       expect(isRetryableError(new Error('ECONNREFUSED'))).toBe(true);
     });
 
-    it('502 / 504 upstream gateway failures are retryable', () => {
-      expect(isRetryableError(new Error('OpenRouter API error 502: Bad Gateway'))).toBe(true);
-      expect(isRetryableError(new Error('Provider returned bad gateway'))).toBe(true);
-      expect(isRetryableError(new Error('504 Gateway Timeout'))).toBe(true);
-      expect(isRetryableError(Object.assign(new Error('gateway failed'), { status: 502 }))).toBe(true);
-      expect(isRetryableError(Object.assign(new Error('upstream gateway closed'), { status: 504 }))).toBe(true);
-    });
-
     it('401 / bare-400 auth & validation errors are NOT retryable', () => {
       expect(isRetryableError(new Error('401 Unauthorized'))).toBe(false);
       expect(isRetryableError(new Error('400 Bad Request'))).toBe(false);

@@ -342,19 +342,12 @@ const chatCompletionSchema = z.object({
 });
 
 export function isRetryableError(err: any): boolean {
-  const status = Number(err?.status);
   const msg = (err.message ?? '').toLowerCase();
-  return status === 502 || status === 504
-    || msg.includes('429') || msg.includes('rate limit') || msg.includes('too many requests')
+  return msg.includes('429') || msg.includes('rate limit') || msg.includes('too many requests')
     || msg.includes('quota') || msg.includes('resource_exhausted')
     || msg.includes('aborted') || msg.includes('timeout') || msg.includes('etimedout')
     || msg.includes('econnrefused') || msg.includes('econnreset')
     || msg.includes('fetch failed')    // undici transport error (proxy down, DNS, TLS, etc.)
-    // 502/504: upstream/provider gateway failures are transient from the
-    // caller's perspective; fall through the chain instead of stopping before
-    // a reliable later fallback (often a paid provider) can answer.
-    || msg.includes('502') || msg.includes('bad gateway')
-    || msg.includes('504') || msg.includes('gateway timeout')
     || msg.includes('503') || msg.includes('unavailable')
     || msg.includes('500') || msg.includes('internal server error')
     // 413: this model's payload limit is too small for the request, but another
